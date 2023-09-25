@@ -51,7 +51,7 @@ console.log(allTodos)
   }, []);
 
   return (
-    <div className='w-full h-full border-4 border-red-500 bg-[#444654] flex flex-col items-center justify-center gap-6 text-white'>
+    <div className='w-full h-full  bg-[#444654] flex flex-col items-center justify-center gap-6 text-white rounded-2xl'>
       <div>
         <h1 className='w-24'>Enter Id</h1>
         <input

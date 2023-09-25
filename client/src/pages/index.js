@@ -15,10 +15,10 @@ export default function Home() {
    
     <div
 
-      className='w-full h-screen bg-[#1C2257] flex flex-col items-center justify-center container mx-auto'>
+      className='w-full h-screen bg-[#1C2257] flex flex-col items-center justify-center '>
         <h1 className='text-lg text-white font-bold'>My To-Do App</h1>
       <div className='w-full h-[80%] bg-[#061543] rounded-3xl overflow-y-scroll'>
-        <div className={newTodo ? 'hidden' : 'p-24'}>
+        <div className={newTodo ? 'hidden' : 'p-8'}>
           <TodoCard
             setNewTodo={setNewTodo} />
         </div>
