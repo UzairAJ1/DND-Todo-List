@@ -36,10 +36,6 @@ const NewTodo = ({ setNewTodo }) => {
     updateTodosMutation.mutate(updatedAllTodos);
     setNewTodo(false)
 
-    setId('');
-    setTitle('');
-    setTask('');
-
   }
 
   useEffect(() => {
