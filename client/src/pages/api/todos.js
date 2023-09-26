@@ -4,6 +4,7 @@ let todos = [
   { id: 1, title: "Todo 1",task:"work on DND" },
   { id: 2, title: "Todo 2",task:"work on Redux" },
   { id: 3, title: "Todo 3",task:"work on Api's" },
+  { id:4, title:"Todo 4", task:"completed the project"}
 ];
 
 export default (req, res) => {

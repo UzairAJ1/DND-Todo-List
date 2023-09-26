@@ -6,10 +6,12 @@ import { useState } from 'react'
 import NewTodo from '@/components/NewTodo'
 import Navbar from '@/components/Navbar'
 const inter = Inter({ subsets: ['latin'] })
-
+import { QueryClient, QueryClientProvider} from 'react-query'
+const queryClient = new QueryClient()
 export default function Home() {
   const [newTodo, setNewTodo] = useState(false);
   return (
+    <QueryClientProvider client={queryClient}>
     <>
     <Navbar />
    
@@ -37,5 +39,6 @@ export default function Home() {
 
     </div>
     </>
+    </QueryClientProvider>
   )
 }

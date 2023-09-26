@@ -1,53 +1,50 @@
 import React, { useState, useEffect } from 'react';
+import { setTodos } from '../features/todos/todo-slice';
 import { useDispatch } from 'react-redux';
-import {updateTodosOnServer} from '../hooks/UpdateTodosOnServer'
+import { useQuery, useMutation } from 'react-query';
+import axios from 'axios'
 const NewTodo = ({ setNewTodo }) => {
   const dispatch = useDispatch();
-  const [id, setId] = useState("");
-  const [title, setTitle] = useState("");
-  const [task, setTask] = useState("");
+  const [id, setId] = useState('');
+  const [title, setTitle] = useState('');
+  const [task, setTask] = useState('');
   const [allTodos, setAllTodos] = useState([]);
-console.log(allTodos)
+
   const newTodo = {
     id: id,
     title: title,
     task: task,
   };
 
-  
+  async function fetchPosts() {
+    const { data } = await axios.get('/api/todos');
+    return data;
+  }
+
+  const updateTodosMutation = useMutation(async (updatedTodos) => {
+    const response = await axios.post('/api/todos', updatedTodos);
+    return response.data;
+  });
+
+  const { data} = useQuery('posts', fetchPosts);
 
   const save = () => {
-    window.location.reload();
+
     const updatedAllTodos = [...allTodos, newTodo];
-
-   
     setAllTodos(updatedAllTodos);
+    dispatch(setTodos(updatedAllTodos));
+    updateTodosMutation.mutate(updatedAllTodos);
+    setNewTodo(false)
 
-   
-    updateTodosOnServer(updatedAllTodos);
+    setId('');
+    setTitle('');
+    setTask('');
 
-    
-    setId("");
-    setTitle("");
-    setTask("");
   }
 
   useEffect(() => {
-    async function fetchTodos() {
-      try {
-        const response = await fetch('/api/todos');
-        if (response.ok) {
-          const data = await response.json();
-          setAllTodos(data);
-        } else {
-          console.error('Failed to fetch data:', response.status);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    }
+    setAllTodos(data);
 
-    fetchTodos();
   }, []);
 
   return (

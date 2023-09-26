@@ -1,85 +1,93 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setTodos } from '../features/todos/todo-slice';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { updateTodosOnServer } from '../hooks/UpdateTodosOnServer';
+import { reorder } from '../hooks/ReOrder'
+import axios from 'axios'
+import { useQuery, useMutation} from 'react-query';
 
-const reorder = (list, startIndex, endIndex) => {
-    const result = Array.from(list);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
-};
+
 
 const TodoCard = ({ setNewTodo }) => {
+    
     const todos = useSelector((state) => state.todos);
+
     const dispatch = useDispatch();
 
-    useEffect(() => {
-        async function fetchTodos() {
-            try {
-                const response = await fetch('/api/todos');
-                if (response.ok) {
-                    const data = await response.json();
-                    dispatch(setTodos(data)); 
-                } else {
-                    console.error('Failed to fetch data:', response.status);
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        }
+    const updateTodosMutation = useMutation(async (updatedTodos) => {
+        const response = await axios.post('/api/todos', updatedTodos);
+        return response.data;
+      });
 
-        fetchTodos();
-    }, [dispatch]);
+    async function fetchPosts() {
+        const { data } = await axios.get('/api/todos')
+        return data
+    }
+
+    const { data, error, isError, isLoading } = useQuery('posts', fetchPosts);
+
 
     const handleDragEnd = (result) => {
         if (!result.destination) {
-         
+            return;
+        }
+
+        const sourceDroppableId = result.source.droppableId;
+        const destinationDroppableId = result.destination.droppableId;
+
+        if (sourceDroppableId !== destinationDroppableId) {
+
+            const { source: { index } } = result;
+            const deletedTodo = todos[index];
+            const updatedTodos = todos.filter((item) => item.id !== deletedTodo.id);
+            dispatch(setTodos(updatedTodos));
+            updateTodosMutation.mutate(updatedTodos);
         } else {
-            const sourceDroppableId = result.source.droppableId;
-            const destinationDroppableId = result.destination.droppableId;
-    
-            if (sourceDroppableId === 'todos' && (destinationDroppableId === 'todos1' || destinationDroppableId === 'todos2')) {
-              
-                const { source: { index } } = result;
-                const deletedTodo = todos[index];
-                const updatedTodos = todos.filter((item) => item.id !== deletedTodo.id);
-                dispatch(setTodos(updatedTodos));
-                updateTodosOnServer(updatedTodos);
-            } else {
-                const reorderedTodos = reorder(
-                    todos,
-                    result.source.index,
-                    result.destination.index
-                );
-                dispatch(setTodos(reorderedTodos));
-                updateTodosOnServer(reorderedTodos);
-            }
+
+            const reorderedTodos = reorder(
+                todos,
+                result.source.index,
+                result.destination.index
+            );
+            dispatch(setTodos(reorderedTodos));
+            updateTodosMutation.mutate(reorderedTodos);
         }
     };
 
     const deleteTodo = (todo) => {
         const updatedTodos = todos.filter((item) => item.id !== todo.id);
         dispatch(setTodos(updatedTodos));
-        updateTodosOnServer(updatedTodos);
+        updateTodosMutation.mutate(updatedTodos);
     };
 
-    return (
-        <DragDropContext
-        
-        onDragEnd={handleDragEnd}>
-            <div className="flex py-8">
+    useEffect(() => {
 
-            <Droppable droppableId="todos1">
+        dispatch(setTodos(data));
+    }, [data, dispatch]);
+
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
+    if (isError) {
+        return <div>Error! {error.message}</div>
+    }
+    return (
+
+        <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex py-8 h-full w-full">
+                <Droppable droppableId="todos1">
                     {(provided1) => (
                         <div
-                            className="w-[25%] h-full flex gap-8 flex-col items-center justify-center bg-transparent"
+                            className="md:w-[25%] w-[15%] h-full flex gap-8 flex-col items-center justify-center bg-transparent"
                             {...provided1.droppableProps}
                             ref={provided1.innerRef}
                         >
-                           <h1 className='text-transparent'>asd</h1>
-                            
+                              <h1 className='text-transparent h-[100px] w-full'>asd</h1>
+                            <div className='text-white w-full h-[700px] flex justify-center'>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-40 h-40">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                            </div>
                             {provided1.placeholder}
                         </div>
                     )}
@@ -87,7 +95,7 @@ const TodoCard = ({ setNewTodo }) => {
                 <Droppable droppableId="todos">
                     {(provided) => (
                         <div
-                            className="w-[50%] h-full flex gap-8 flex-col items-center justify-center bg-black rounded-xl py-8"
+                            className="md:w-[50%] w-[70%] flex gap-8 flex-col items-center justify-center bg-black rounded-xl py-8 "
                             {...provided.droppableProps}
                             ref={provided.innerRef}
                         >
@@ -105,12 +113,11 @@ const TodoCard = ({ setNewTodo }) => {
                                             <h1>Task: {todo.task}</h1>
                                             <button
                                                 onClick={() => { deleteTodo(todo) }}
-                                                className=' h-8 bg-red-500'>Delete</button>
+                                                className=' h-8 bg-red-500'>Completed</button>
                                         </div>
                                     )}
                                 </Draggable>
                             ))}
-
                             <button
                                 onClick={() => { setNewTodo(true) }}
                                 className='w-32 h-8 bg-green-700 text-white font-bold px-4'>Add A Todo</button>
@@ -118,16 +125,20 @@ const TodoCard = ({ setNewTodo }) => {
                         </div>
                     )}
                 </Droppable>
-
                 <Droppable droppableId="todos2">
                     {(provided1) => (
                         <div
-                            className="w-[25%] h-full flex gap-8 flex-col items-center justify-center bg-transparent"
+                            className="md:w-[25%] w-[15%] h-full flex gap-8 flex-col items-center justify-center bg-transparent"
                             {...provided1.droppableProps}
                             ref={provided1.innerRef}
                         >
-                           <h1 className='text-transparent'>asd</h1>
-                           
+                            <h1 className='text-transparent h-[100px] w-full'>asd</h1>
+                            <div className='text-white w-full h-[700px] flex justify-center'>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-40 h-40">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                            </div>
+
                             {provided1.placeholder}
                         </div>
                     )}
