@@ -22,6 +22,7 @@ export default function Home() {
       <div className='w-full h-[80%] bg-[#061543] rounded-3xl overflow-y-scroll'>
         <div className='w-full text-center mt-12'>
         <h2 className='text-lg text-white font-bold'>Drag the Todos to set thier priority</h2>
+        <h2 className=' text-white font-bold text-sm mt-4'>Or Drag it to left or right to Delete</h2>
         </div>
         
         <div className={newTodo ? 'hidden' : 'p-8'}>
