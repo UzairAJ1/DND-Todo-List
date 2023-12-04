@@ -20,6 +20,7 @@ export default function Home() {
       className='w-full h-screen bg-[#1C2257] flex flex-col items-center justify-center '>
         <h1 className='text-lg text-white font-bold'>My To-Do App</h1>
       <div className='w-full h-[80%] bg-[#061543] rounded-3xl overflow-y-scroll'>
+        <h2 className='text-lg text-white font-bold'>Drag the Todos to set thier priority</h2>
         <div className={newTodo ? 'hidden' : 'p-8'}>
           <TodoCard
             setNewTodo={setNewTodo} />
